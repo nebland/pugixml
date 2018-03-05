@@ -1093,7 +1093,7 @@ namespace pugi
 {
 	struct xml_attribute_struct
 	{
-		xml_attribute_struct(impl::xml_memory_page* page): name(0), value(0), prev_attribute_c(0), next_attribute(0)
+		xml_attribute_struct(impl::xml_memory_page* page): name(0), prefix(0), value(0), prev_attribute_c(0), next_attribute(0)
 		{
 			header = PUGI__GETHEADER_IMPL(this, page, 0);
 		}
@@ -1101,6 +1101,7 @@ namespace pugi
 		uintptr_t header;
 
 		char_t*	name;
+        char_t* prefix;
 		char_t*	value;
 
 		xml_attribute_struct* prev_attribute_c;
@@ -3296,6 +3297,15 @@ PUGI__NS_BEGIN
 									PUGI__SCANWHILE_UNROLL(PUGI__IS_CHARTYPE(ss, ct_symbol)); // Scan for a terminator.
 									PUGI__ENDSEG(); // Save char in 'ch', terminate & step over.
 
+                                    prefix = strstr(a->name, ":");
+
+                                    if (prefix)
+                                    {
+                                        a->prefix = cursor->name;
+                                        *prefix = 0;
+                                        a->name = ++prefix;
+                                    }
+
 									if (PUGI__IS_CHARTYPE(ch, ct_space))
 									{
 										PUGI__SKIPWS(); // Eat any whitespace.
@@ -5226,6 +5236,11 @@ namespace pugi
 	{
 		return (_attr && _attr->name) ? _attr->name + 0 : PUGIXML_TEXT("");
 	}
+
+    PUGI__FN const char_t* xml_attribute::prefix() const
+    {
+        return (_attr && _attr->prefix) ? _attr->prefix + 0 : PUGIXML_TEXT("");
+    }
 
 	PUGI__FN const char_t* xml_attribute::value() const
 	{

@@ -376,6 +376,7 @@ namespace pugi
 
 		// Get attribute name/value, or "" if attribute is empty
 		const char_t* name() const;
+        const char_t* prefix() const;
 		const char_t* value() const;
 
 		// Get attribute value, or the default value if attribute is empty
