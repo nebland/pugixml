@@ -1109,7 +1109,7 @@ namespace pugi
 
 	struct xml_node_struct
 	{
-		xml_node_struct(impl::xml_memory_page* page, xml_node_type type): name(0), value(0), parent(0), first_child(0), prev_sibling_c(0), next_sibling(0), first_attribute(0)
+		xml_node_struct(impl::xml_memory_page* page, xml_node_type type): name(0), prefix(0), value(0), parent(0), first_child(0), prev_sibling_c(0), next_sibling(0), first_attribute(0)
 		{
 			header = PUGI__GETHEADER_IMPL(this, page, type);
 		}
@@ -1117,6 +1117,7 @@ namespace pugi
 		uintptr_t header;
 
 		char_t* name;
+		char_t* prefix;
 		char_t* value;
 
 		xml_node_struct* parent;
@@ -3247,6 +3248,7 @@ PUGI__NS_BEGIN
 			char_t ch = 0;
 			xml_node_struct* cursor = root;
 			char_t* mark = s;
+			char_t* prefix = 0;
 
 			while (*s != 0)
 			{
@@ -3263,6 +3265,15 @@ PUGI__NS_BEGIN
 
 						PUGI__SCANWHILE_UNROLL(PUGI__IS_CHARTYPE(ss, ct_symbol)); // Scan for a terminator.
 						PUGI__ENDSEG(); // Save char in 'ch', terminate & step over.
+
+						prefix = strstr(cursor->name, ":");
+
+						if (prefix)
+						{
+							cursor->prefix = cursor->name;
+							*prefix = 0;
+							cursor->name = ++prefix;
+						}
 
 						if (ch == '>')
 						{
@@ -3371,8 +3382,19 @@ PUGI__NS_BEGIN
 
 						mark = s;
 
+						char_t* prefix = cursor->prefix;
 						char_t* name = cursor->name;
+
 						if (!name) PUGI__THROW_ERROR(status_end_element_mismatch, mark);
+
+						if (prefix)
+						{
+							while (PUGI__IS_CHARTYPE(*s, ct_symbol) && *s != ':')
+							{
+								if (*s++ != *prefix++) PUGI__THROW_ERROR(status_end_element_mismatch, mark);
+							}
+							s++;
+						}
 
 						while (PUGI__IS_CHARTYPE(*s, ct_symbol))
 						{
@@ -5468,6 +5490,11 @@ namespace pugi
 	PUGI__FN const char_t* xml_node::name() const
 	{
 		return (_root && _root->name) ? _root->name + 0 : PUGIXML_TEXT("");
+	}
+
+	PUGI__FN const char_t* xml_node::prefix() const
+	{
+		return (_root && _root->prefix) ? _root->prefix + 0 : PUGIXML_TEXT("");
 	}
 
 	PUGI__FN xml_node_type xml_node::type() const

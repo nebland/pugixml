@@ -485,7 +485,10 @@ namespace pugi
 		xml_node_type type() const;
 
 		// Get node name, or "" if node is empty or it has no name
-		const char_t* name() const;
+        const char_t* name() const;
+
+        // Get node name prefix, or "" if node is empty or it has no prefix
+        const char_t* prefix() const;
 
 		// Get node value, or "" if node is empty or it has no value
 		// Note: For <node>text</node> node.value() does not return "text"! Use child_value() or text() methods to access text inside nodes.
